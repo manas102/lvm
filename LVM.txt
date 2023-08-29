@@ -1,0 +1,124 @@
+LVM (LOGICAL VOLUME MANAGER)
+
+1. You can create file systems that extend across multiple storage devices
+2. You can aggregate multiple storage devices into a single logical volume
+3. Expand or shrink file systems in real time while the data remains online and fully accessible
+4. Easily migrate data from one storage device to another online
+5. You can use human readable device names of your choosing
+    e.g. /dev/vg-database/lv_db_logs vs /dev/sdb3
+6. Increase throughput by allowing your system to read data in parallel
+7. Increaese fault tolerance and reliablility by having more than one copy of your data
+8. Create point-in-time snapshots of your filesystem
+
+
+LAYER OF ABSTRACTION
+
+File Systems            /var    /opt/app
+        |
+Logical Volumes(LV)
+        |
+Volume Group(VG)
+        |
+Physical volumes(PV)
+        |
+Storage Devices
+
+MANAGING LVM
+
+Logical Volume Creation Process
+1. Create one or more physical volumes
+2. Create a volume group from those one or more physical volumes
+3. Create one or more logical volumes from the volume group
+
+What storage devices are available? (run command with root user or via sudo)
+$ lvmdiskscan
+View block devices
+$ lsblk
+View full path
+$ lsblk -p
+Disk space usage
+$ df -h
+Storage attached to linux system
+$ fdisk -l
+
+Create PV
+$ pvcreate /dev/sdb
+List pv
+$ pvs
+Create VG from pv(s)
+$ vgcreate vg_app /dev/sdb
+List VG
+$ vgs
+
+Create Logical volume 
+$ lvcreate -L 20G -n lv_data vg_app
+
+List LV
+$ lvs
+$ lvdisplay
+
+Create file system on logical volume
+$ mkfs -t ext4 /dev/vg_app/lv_data
+The name of file system would be /dev/mapper/vg_app-lv_data
+
+Create mount point
+$ mkdir /data
+
+Mount
+$ mount /dev/vg_app/lv_data /data
+
+View FileSystem
+$ df -h /data
+
+Mount at Boot time: Make entry in /etc/fstab
+/dev/vg_app/lv_app(file system name) /app(mount point) ext(file type) 0 0
+
+Logical volume is made up of LE(Logical Extents)
+$ lvmdisplay
+
+Physical volume is made up of PE(Physical Extents)
+$ pvdispaly -m
+
+Free PEs in VG
+$ vgdisplay
+
+Get Help
+$ lvcreate --help
+
+Create using %
+$ lvcrete 100%FREE -n lv_logs lv_app
+
+Add PV to existing VG
+$ vgextend vg_app /dev/sdc
+
+Add space ot existing LV
+$ lvextend -L +5G -r /dev/vg_app/lv_data
+
+Resisze filesystem(For ext4)
+$ resize2fs /dev/vg_app/lv_data
+
+Use multiple PV from VGs
+$ vgcreate /dev/sdd /dev/sde
+
+Mirrored LV (exact data is stored as copies)
+$ lvcreate -m 1 -L 5G lv_secrets vg_app
+
+Unmount filesystem
+$ unmount /secrets
+
+Remove LV
+$lvremove /dev/vg_app/lv_data
+
+Remove PV from VG
+$ vgreduce vg_safe /dev/sde
+
+Remove VG
+$ vgremove vg_safe
+
+Remove PV from LVM
+$pvremove /dev/sde
+
+Move data from /dev/sde to /dev/sdb
+$ pvcreate /dev/sde
+$ vgextend vg_app /dev/sde
+$ pvmove /dev/sdb /sdb/sde

@@ -104,7 +104,7 @@ Mirrored LV (exact data is stored as copies)
 $ lvcreate -m 1 -L 5G lv_secrets vg_app
 
 Unmount filesystem
-$ unmount /secrets
+$ umount /secrets
 
 Remove LV
 $lvremove /dev/vg_app/lv_data
